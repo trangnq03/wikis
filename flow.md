@@ -2,8 +2,6 @@
 
 ## 1) Phạm vi tài liệu
 
-Tài liệu này mô tả **đúng theo implementation hiện tại** của hệ thống tại BE:
-
 - Danh sách endpoint và contract API.
 - Payload/response mẫu.
 - Thứ tự gọi API cho các luồng chính: đăng ký gói, mua thêm, mua lẻ theo tin, retry/cancel.
@@ -494,13 +492,31 @@ Hệ thống hiện cho phép mua thêm song song theo `purchase_policy=allow_pa
 Hiện BE cung cấp dữ liệu để FE quyết định chặn/mở hành vi:
 
 1. FE gọi `GET /api/v1/service/credits`
-2. FE lọc theo `feature_type` cần dùng (`post`, `image`, `video`, `posting_service`)
-3. Rule check:
-   - Nếu `is_unlimited=true` => luôn đủ token.
-   - Nếu `is_unlimited=false` => check `quantity_remaining`.
-4. Nếu thiếu token:
+2. FE gọi thêm `GET /api/v1/service/entitlements` để kiểm tra trạng thái hiệu lực gói.
+3. FE lọc theo `feature_type` cần dùng (`post`, `image`, `video`, `posting_service`).
+4. Rule check (theo thứ tự bắt buộc):
+   - Bước 1: Check hạn dùng:
+     - `credits.expires_at` (nếu có) phải `>= now`.
+     - entitlement liên quan phải còn hiệu lực (`status=active` và `end_date >= now`).
+   - Bước 2: Check số lượng:
+     - Nếu `is_unlimited=true` => đủ token về số lượng.
+     - Nếu `is_unlimited=false` => `quantity_remaining > 0`.
+5. Nếu thiếu token hoặc đã hết hạn:
    - FE điều hướng user qua flow mua gói/mua lẻ.
    - FE có thể chọn `scope_type=account` (global) hoặc `scope_type=listing` (vừa đủ cho tin cụ thể).
+
+Pseudo logic:
+
+```text
+if expired_by_credit_expires_at or expired_by_entitlement_status_or_end_date:
+    deny_and_prompt_purchase
+else if is_unlimited:
+    allow
+else if quantity_remaining > 0:
+    allow
+else:
+    deny_and_prompt_purchase
+```
 
 Lưu ý hiện trạng:
 
@@ -576,5 +592,6 @@ sequenceDiagram
   - `transactions/history` để hiển thị lịch sử thanh toán.
   - `entitlements` + `credits` để hiển thị quyền lợi/tồn dư.
 - Rule token:
-  - Ưu tiên kiểm tra `is_unlimited`.
-  - Nếu không unlimited thì dùng `quantity_remaining`.
+  - Luôn kiểm tra hết hạn trước (`credits.expires_at`, `entitlements.status/end_date`).
+  - Nếu còn hiệu lực: check `is_unlimited`.
+  - Nếu không unlimited: check `quantity_remaining > 0`.
