@@ -370,32 +370,26 @@ Mục đích:
 
 Field:
 
-- `id`: khóa chính.
-- `ref_token_id`: idempotency/session token duy nhất.
-- `user_id`: FK tới `core_user`.
-- `target_type`: target dùng để pricing/filter.
-- `listing_ref_type`: listing ref type.
-- `listing_ref_id`: listing ref id.
-- `requested_post`: requested post raw.
-- `requested_image`: requested image raw.
-- `requested_video`: requested video raw.
-- `requested_delta_post`: delta post sau baseline.
-- `requested_delta_image`: delta image sau baseline.
-- `requested_delta_video`: delta video sau baseline.
-- `free_applied_post`: free post đã áp.
-- `free_applied_image`: free image đã áp.
-- `free_applied_video`: free video đã áp.
-- `reserved_post`: số post reserve thành công.
-- `reserved_image`: số image reserve thành công.
-- `reserved_video`: số video reserve thành công.
-- `remaining_post`: phần post còn thiếu cần trả phí.
-- `remaining_image`: phần image còn thiếu cần trả phí.
-- `remaining_video`: phần video còn thiếu cần trả phí.
-- `status`: trạng thái session (`reserved`, `released`, `committed`).
-- `expires_at`: TTL hết hạn reserve.
-- `metadata`: pricing snapshot + group_code + pricing_target_type + ttl.
-- `created_at`: thời điểm tạo.
-- `updated_at`: thời điểm cập nhật.
+- `id`: khóa chính.  
+- `ref_token_id`: idempotency/session token duy nhất.  
+- `user_id`: FK tới `core_user`.  
+- `target_type`: target dùng để pricing/filter.  
+- `listing_ref_type`: listing ref type.  
+- `listing_ref_id`: listing ref id.  
+
+- `feature_metrics`: JSON snapshot chứa metrics theo các nhóm trạng thái (`reserved`, `requested`, `free_applied`, `requested_delta`, `remaining_required`) theo từng feature (`post`, `image`, `video`, `posting_service`), gồm:
+
+  * `reserved`: số lượng đã reserve thành công.
+  * `requested`: số lượng yêu cầu.
+  * `free_applied`: số lượng free đã áp dụng.
+  * `requested_delta`: phần chênh lệch so với baseline.
+  * `remaining_required`: số lượng còn lại cần trả phí.
+
+- `status`: trạng thái session (`reserved`, `released`, `committed`).  
+- `expires_at`: TTL hết hạn reserve.  
+- `metadata`: pricing snapshot + group_code + pricing_target_type + ttl.  
+- `created_at`: thời điểm tạo.  
+- `updated_at`: thời điểm cập nhật.  
 
 ### 4.13 `payment_payment` (Payment)
 
