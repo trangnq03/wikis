@@ -48,11 +48,29 @@ Enforce trên server: `assert_can_purchase_service_package` — gọi từ `_cre
 | `False` | Hạn chế chồng gói (vd. admin tạo service phụ đăng tin với `is_stackable=False` trong `market/admin.py` cho một số checkout). |
 
 **Luồng phụ thuộc:**  
-`create_user_service_after_payment` có xếp `start_date` sau `end_date` gói cũ **cùng service** nếu đã có `UserService` active/scheduled — tức vẫn có thể có nhiều kỳ nối tiếp. **`is_stackable` chưa được đọc trực tiếp trong `userservice`**; cần đồng bộ với product/FE hoặc thêm kiểm tra khi tạo order.
+`create_user_service_after_payment` vẫn xếp kỳ nối tiếp khi được phép. **`is_stackable`**: validate khi tạo đơn (`assert_can_purchase_service_package`); console admin tạo đơn tay không gọi bước này.
 
 ---
 
-## 4. `credit_pool_group`
+## 4. Token gói (`ServiceFeature` — admin: *Service package tokens*)
+
+**`reset_policy`**
+
+| Giá trị | Ý nghĩa | Hành vi BE |
+|--------|---------|------------|
+| `carry_over` | Quota **cộng dồn** trong kỳ, không bật refill 30 ngày **chỉ nhờ** trường này. | Trên gói `credit_pool` / `aggregate`: dòng `carry_over` không refill. Trên gói **`monthly_bucket`**: **mọi** dòng đều reset theo kỳ (chế độ gói áp dụng đồng loạt). |
+| `reset_monthly` | Reset quota **mỗi kỳ 30 ngày** từ `user_service.start_date` cho **đúng dòng token** đó. | Giống metadata `monthly_bucket`: cấp `per_period = quantity×order_qty` (không nhân `duration` của aggregate); refill trong `sync_monthly_buckets_for_user`. |
+
+**`expires_with_entitlement`**
+
+| Giá trị | Ý nghĩa | Hành vi BE |
+|--------|---------|------------|
+| `True` (mặc định) | Lượt **hết khi hết kỳ gói** (gắn `expires_at` = `end_date` trên `UserServiceFeature` và `UserCreditBalance`). | `eligible_package_credit_balances_qs` chỉ tính khi `UserService` còn trong cửa sổ entitlement (như trước). |
+| `False` | **Rollover**: lượt còn dùng được sau khi gói hết / trạng thái `EXPIRED`, không bị xóa theo ngày hết gói. | Cả hai `expires_at` = NULL; query eligible gồm nhánh **rollover** (vẫn **loại** `UserService` **CANCELED**). |
+
+---
+
+## 5. `credit_pool_group`
 
 **Vai trò:** Khi user **đăng tin / reserve entitlement**, backend lọc **dòng `UserCreditBalance` nào được dùng** theo nhóm gói gắn trên `Service` (`source_user_service_feature → … → service.credit_pool_group`) **và** (tùy nhóm) **`target_type` của service** — xem `entitlement._resolve_group`.
 
@@ -71,7 +89,7 @@ Enforce trên server: `assert_can_purchase_service_package` — gọi từ `_cre
 
 ---
 
-## 5. Tóm tắt nhanh
+## 6. Tóm tắt nhanh
 
 | Trường | Chỗ “chạy thật” trong BE | Ghi chú |
 |--------|-------------------------|--------|
@@ -79,7 +97,8 @@ Enforce trên server: `assert_can_purchase_service_package` — gọi từ `_cre
 | `purchase_policy` | Lưu + API + validate đơn | `payment_orders` / `views.create_order`. |
 | `is_stackable` | Lưu + API + validate đơn | Gói non-stackable chặn khi còn entitlement chồng. |
 | `credit_pool_group` | Reserve/commit đăng tin | **Bắt buộc** cấu hình đúng để lượt tin khớp kỳ vọng nghiệp vụ. |
+| `ServiceFeature.reset_policy` | `create_user_service_after_payment` + `monthly_bucket.sync_*` | `reset_monthly` → cùng cơ chế bucket 30 ngày. |
+| `ServiceFeature.expires_with_entitlement` | Cấp `expires_at` + `eligible_package_credit_balances_qs` | `False` → rollover sau khi gói hết; hủy gói vẫn mất lượt. |
 
 ---
 
-*Cập nhật theo mã nguồn trong `src/service` (entitlement, userservice, models). Khi bổ sung enforce `purchase_policy` / `monthly_bucket`, nên chỉnh lại mục tương ứng trong file này.*
