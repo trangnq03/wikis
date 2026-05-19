@@ -148,7 +148,7 @@ Cả ba API đều hỗ trợ xác thực bằng JWT hoặc UserName/PassWord th
 
 **URL:** `POST /api/v1/gov-reporting/moit/listing-charges`
 
-**Mô tả:** Trả về danh sách chi tiết các giao dịch thanh toán tin đăng, hỗ trợ phân trang và nhiều bộ lọc. Bao gồm 3 loại order: `entitlement_market` (mua gói tin), `service_package` (mua gói dịch vụ), `listing_renewal` (gia hạn tin).
+**Mô tả:** Trả về danh sách chi tiết các giao dịch thanh toán tin đăng, hỗ trợ phân trang và nhiều bộ lọc. Bao gồm 3 loại order: `entitlement_market` (Đăng tin), `service_package` (mua gói dịch vụ), `listing_renewal` (gia hạn tin).
 
 **Caching:** Không cache — luôn query database mỗi request.
 
@@ -292,7 +292,7 @@ Cấu trúc của mỗi item phụ thuộc vào **loại order** (`payment_order
 
 ---
 
-##### Loại `entitlement_market` (mua gói tin) và `service_package` (mua gói dịch vụ)
+##### Loại `entitlement_market` (Đăng tin) và `service_package` (mua gói dịch vụ)
 
 `listing_name` là **string** — tên tin đăng hoặc tên gói dịch vụ.
 
@@ -500,7 +500,7 @@ Có 3 loại order được xử lý, phân biệt qua `metadata.payment_order_t
 
 | `payment_order_type` | Mô tả | `listing_name` type |
 |----------------------|-------|---------------------|
-| `entitlement_market` | Mua gói tin đăng | `string` — tên listing |
+| `entitlement_market` | Đăng tin đăng | `string` — tên listing |
 | `service_package` | Mua gói dịch vụ | `string` — tên service |
 | `listing_renewal` | Gia hạn tin đăng | `array of object` — danh sách listing trong order |
 | `null` / `""` | Legacy orders | `string` — tên service |
