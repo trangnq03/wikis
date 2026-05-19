@@ -202,16 +202,12 @@ Cả ba API đều hỗ trợ xác thực bằng JWT hoặc UserName/PassWord th
 | `AMBULANCE` | Xe cứu thương |
 | `DOCTOR` | Bác sĩ |
 | `NURSE` | Điều dưỡng, y tá (tự động normalize → `DOCTOR`) |
-| `HEALTHCARE_STAFF` | Nhân viên y tế (tự động normalize → `DOCTOR`) |
 | `MEDICAL_MARKET` | Chợ dược phẩm |
 | `EQUIPMENT_MARKET` | Chợ y tế |
 | `JOB` | Việc làm |
 | `SOCIAL` | Kết bạn, giao lưu |
 | `HOUSESHARE` | Chia sẻ nhà |
 | `PARTNERSHIP` | Hợp tác |
-| `ACCOUNT` | Account |
-
-> **Lưu ý:** `NURSE` và `HEALTHCARE_STAFF` được tự động normalize thành `DOCTOR` trước khi filter.
 
 ---
 
